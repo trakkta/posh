@@ -38,9 +38,6 @@ function Invoke-Curl {
     )
     
     begin {
-    }
-    
-    process {
         if ([string]::IsNullOrEmpty($X)) {
             $X = @("POST", "GET")[[string]::IsNullOrEmpty($d)]
         }
@@ -65,7 +62,23 @@ function Invoke-Curl {
         }
         
         $method = New-Object System.Net.Http.HttpMethod($X)
-        $req = New-Object System.Net.Http.HttpRequestMessage($method, $u)
+    }
+    
+    process {
+        $uri = New-Object System.Uri($u, [System.UriKind]::Absolute)
+        $req = New-Object System.Net.Http.HttpRequestMessage($method, $uri)
+        
+        if ($requestHeaders.Keys -notcontains "Host") {
+            $req.Headers.Add("Host", $uri.Host)
+        }
+        
+        if ($requestHeaders.Keys -notcontains "Accept") {
+            $req.Headers.Add("Accept", "*/*")
+        }
+        
+        if ($requestHeaders.Keys -notcontains "User-Agent") {
+            $req.Headers.Add("User-Agent", -Join @("Powershell/", $PSVersionTable.PSVersion.Major, ".", $PSVersionTable.PSVersion.Minor, " (", [System.Environment]::OSVersion.VersionString, ")"))
+        }
         
         foreach ($header in $requestHeaders.GetEnumerator()) {                
             $req.Headers.Add($header.Key, $header.Value)
@@ -83,7 +96,7 @@ function Invoke-Curl {
         
         $outStr = New-Object System.Text.StringBuilder
         
-        [void]$outStr.Append($method)
+        [void]$outStr.Append(@($method, $uri.AbsolutePath, "HTTP/1.1") -Join " ")
         [void]$outStr.Append("`n")
         
         foreach ($header in $req.Headers) {
@@ -110,12 +123,14 @@ function Invoke-Curl {
         }
         
         if ($res.Content -ne $null) {
+            [void]$outStr.Append("`n")
             [void]$outStr.Append($res.Content.ReadAsStringAsync().Result)
+            [void]$outStr.Append("`n")
         }
         
         $client.Dispose()
         
-        return $outStr.ToString()        
+        return $outStr.ToString()
     }
     
     end {
