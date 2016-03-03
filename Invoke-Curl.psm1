@@ -33,7 +33,7 @@ function Invoke-Curl {
         [hashtable]$H,
         [Parameter(Mandatory=$false,ValueFromPipeline=$false)]
         [string]$d,
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,Position=0)]
         [string]$u
     )
     
