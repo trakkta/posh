@@ -22,8 +22,6 @@
 # Returns:
 # [string] - output, in a CURL-like fashion
 
-Export-ModuleMember Invoke-Curl
-
 Add-Type -AssemblyName System.Net.Http
 
 function Invoke-Curl {
@@ -147,3 +145,5 @@ function Invoke-Curl {
     end {
     }
 }
+
+Export-ModuleMember -function Invoke-Curl
