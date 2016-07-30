@@ -15,12 +15,13 @@
 # A helper routine similar to cURL. It uses the flexible and REST-friendly System.Net.Http.HttpClient, needs .NET 4.5+ 
 # 
 # Parameters:
-# -X [string], optional - HTTP method (GET, POST, ...), GET and POST can be inferred
-# -H [hashtable], optional - a collection of headers, e.g. @{"Content-Type"="application/json", "Accept"="*/*"}
-# -d [string], optional - request data
-# -u [string] - URI of the resource
+# -X [string], optional         HTTP method (GET, POST, ...), GET and POST can be inferred
+# -H [hashtable], optional      a collection of headers, e.g. @{"Content-Type"="application/json", "Accept"="*/*"}
+# -d [string], optional         request data
+# -O [string], optional         name of output file for response body
+# -u [string]                   URI of the resource
 # Returns:
-# [string] - output, in a CURL-like fashion
+# [string]                      output, in a CURL-like fashion
 
 Add-Type -AssemblyName System.Net.Http
 
@@ -33,6 +34,8 @@ function Invoke-Curl {
         [hashtable]$H,
         [Parameter(Mandatory=$false,ValueFromPipeline=$false)]
         [string]$d,
+        [Parameter(Mandatory=$false,ValueFromPipeline=$false)]
+        [string]$O,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,Position=0)]
         [string]$u
     )
@@ -132,9 +135,15 @@ function Invoke-Curl {
         }
         
         if ($res.Content -ne $null) {
-            [void]$outStr.Append("`n")
-            [void]$outStr.Append($res.Content.ReadAsStringAsync().Result)
-            [void]$outStr.Append("`n")
+            $contentStr = $res.Content.ReadAsStringAsync().Result
+
+            if ([string]::IsNullOrEmpty($O)) {
+                [void]$outStr.Append("`n")
+                [void]$outStr.Append($contentStr)
+                [void]$outStr.Append("`n")
+            } else {
+                $contentStr | Out-File $O
+            }
         }
         
         $client.Dispose()
